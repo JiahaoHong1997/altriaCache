@@ -2,7 +2,6 @@ package lru
 
 import (
 	"container/list"
-	"fmt"
 )
 
 type Cache struct {
@@ -54,6 +53,9 @@ func (c *Cache) RemoveOldest() {
 		kv := ele.Value.(*entry)
 		delete(c.cache, kv.key)
 		c.nBytes -= int64(len(kv.key)) + int64(kv.value.Len())
+		if c.onEvicted != nil {
+			c.onEvicted(kv.key, kv.value)
+		}
 	}
 }
 
@@ -74,5 +76,4 @@ func (c *Cache) Add(key string, value Value) {
 	for c.maxBytes != 0 && c.maxBytes < c.nBytes {
 		c.RemoveOldest()
 	}
-	fmt.Println(c.nBytes)
 }

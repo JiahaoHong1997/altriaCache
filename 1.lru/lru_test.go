@@ -1,6 +1,9 @@
 package lru
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 type String string
 
@@ -31,5 +34,26 @@ func TestRemoveoldest(t *testing.T) {
 
 	if _, ok := lru.Get("key1"); ok || lru.Len() != 2 {
 		t.Fatalf("Removeoldest key1 failed")
+	}
+}
+
+
+func TestOnEvicted(t *testing.T) {
+	keys := make([]string, 0)
+
+	// callback removed elements' keys from cache
+	callback := func(key string, value Value) {
+		keys = append(keys, key)
+	}
+	lru := New(int64(10), callback)
+	lru.Add("key1", String("123456"))
+	lru.Add("k2", String("k2"))
+	lru.Add("k3", String("k3"))
+	lru.Add("k4", String("k4"))
+
+	expect := []string{"key1", "k2"}
+
+	if !reflect.DeepEqual(expect, keys) {
+		t.Fatalf("Call OnEvicted failed, expect keys equals to %s", expect)
 	}
 }
